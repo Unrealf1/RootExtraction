@@ -2,7 +2,6 @@
 // Created by fedor on 9/29/19.
 //
 
-#include <TGeoManager.h>
 #include "JSON/JSONWriter.hpp"
 
 JSONWriter::JSONWriter(std::ostream &stream): stream(stream) {

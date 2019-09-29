@@ -5,7 +5,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 project(RootExtraction)
-
 option(DEBUG "Build with debug flags" OFF)
 option(TESTS "Build tests" OFF)
 
@@ -16,12 +15,9 @@ endif(DEBUG)
 find_package(ROOT REQUIRED)
 list(APPEND CMAKE_PREFIX_PATH $ENV{ROOTSYS})
 include(${ROOT_USE_FILE})
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 add_subdirectory("./General")
 add_subdirectory("./Test")
-#if (TESTS)
-#    add_subdirectory("./Test")
-#endif(TESTS)
-
-
+# if (TESTS)
+#     add_subdirectory("./Test")
+# endif(TESTS)
