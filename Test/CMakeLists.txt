@@ -8,9 +8,11 @@ find_package(GTest REQUIRED)
 file(GLOB_RECURSE SOURCES . source/*.cpp)
 
 add_executable(Test ${SOURCES})
-    
+
 target_include_directories(Test PUBLIC "./include")
 
-target_link_libraries(Test PUBLIC General GTest::GTest GTest::Main)
+target_link_libraries(Test PUBLIC General GTest::GTest GTest::Main ${ROOT_LIBRARIES})
 
 add_test(CommonTestsAll Test)
+
+
