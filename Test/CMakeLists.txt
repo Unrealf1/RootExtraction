@@ -2,18 +2,22 @@ cmake_minimum_required(VERSION 3.5)
 
 project(RootExtraction-Test)
 
-SET(CMAKE_CXX_COMPILER /usr/bin/clang++)
+find_package(ROOT CONFIG REQUIRED)
 
 enable_testing()
 find_package(GTest REQUIRED)
 
-#file(GLOB_RECURSE SOURCES . source/*.cpp)
+# list(APPEND CMAKE_PREFIX_PATH $ENV{ROOTSYS})
+# include(${ROOT_USE_FILE})
 
-add_executable(Test source/test_main.cpp)
+#file(GLOB_RECURSE SOURCES . source/*.cpp)
+file(GLOB_RECURSE SOURCES2 . $ENV{ROOTSYS}/lib/*.so)
+
+add_executable(Test source/test_main.cpp ${SOURCES2})
 
 target_include_directories(Test PUBLIC "./include")
 
-target_link_libraries(Test PUBLIC General GTest::GTest GTest::Main ${ROOT_LIBRARIES})
+target_link_libraries(Test PUBLIC ${SOURCES2} General GTest::GTest GTest::Main ROOT::Core ROOT::Graf3d ROOT::Graf ROOT::RIO ROOT::Gpad)
 
 add_test(CommonTestsAll Test)
 

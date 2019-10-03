@@ -1,7 +1,7 @@
 #include "test_main.hpp"
 
 int main(int argc, char** argv) {
-    TGeoManager::Import("../root_tests/geofile_full.root");
+    TGeoManager::Import("~/Programming/npm/root_tests/geofile_full.root");
     if (gGeoManager == nullptr) {
         std::cerr << "Can't find TGeoManager in file" << std::endl;
         return 0;

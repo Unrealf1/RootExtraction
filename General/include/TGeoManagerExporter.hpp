@@ -8,9 +8,10 @@
 #include <queue>
 #include <unordered_set>
 #include <ostream>
-#include "TGeoManager.h"
+#include <TGeoManager.h>
+#include "TGeometry.h"
+//#include "TGeoManager.h"
 #include "JSON/JSONWriter.hpp"
-
 
 class TGeoManagerExporter {
 public:
@@ -23,7 +24,7 @@ private:
     TGeoManager* geoManager;
 
     void Prepare();
-    ClassDef(TGeoManagerExporter, 1);
+    //ClassDef(TGeoManagerExporter, 1);
 };
 
 

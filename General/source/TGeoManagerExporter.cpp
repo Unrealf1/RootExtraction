@@ -54,4 +54,4 @@ void TGeoManagerExporter::Prepare() {
     }
 
 }
-ClassImp(TGeoManagerExporter);
+//ClassImp(TGeoManagerExporter);
