@@ -19,7 +19,7 @@ private:
     std::ostream& stream;
     uint32_t current_depth = 0;
     const std::string block_begin = "{\n";
-    const std::string block_end = "\n}\n";
+    const std::string block_end = "}";
     bool last_property = false;
 
     void CheckForComma();

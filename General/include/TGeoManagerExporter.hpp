@@ -10,7 +10,6 @@
 #include <ostream>
 #include <TGeoManager.h>
 #include "TGeometry.h"
-//#include "TGeoManager.h"
 #include "JSON/JSONWriter.hpp"
 
 class TGeoManagerExporter {
@@ -24,6 +23,11 @@ private:
     TGeoManager* geoManager;
 
     void Prepare();
+
+    void writeTemplates(JSONWriter& wr);
+    void writeChildren(JSONWriter& wr);
+    void writeStyles(JSONWriter& wr);
+
     //ClassDef(TGeoManagerExporter, 1);
 };
 

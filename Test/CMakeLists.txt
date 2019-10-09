@@ -17,7 +17,7 @@ add_executable(Test source/test_main.cpp ${SOURCES2})
 
 target_include_directories(Test PUBLIC "./include")
 
-target_link_libraries(Test PUBLIC ${SOURCES2} General GTest::GTest GTest::Main ROOT::Core ROOT::Graf3d ROOT::Graf ROOT::RIO ROOT::Gpad)
+target_link_libraries(Test PUBLIC ${SOURCES2} General GTest::GTest GTest::Main)
 
 add_test(CommonTestsAll Test)
 

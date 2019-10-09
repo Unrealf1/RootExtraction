@@ -16,6 +16,6 @@ add_library(General SHARED ${SOURCES} ${SOURCES2} GeoManagerExtractor.cxx)
 
 target_include_directories(General PUBLIC "./include" ${ROOT_INCLUDE_DIRS})
 
-target_link_libraries(General PUBLIC ${SOURCES2} ROOT::Core ROOT::Graf3d ROOT::Graf ROOT::RIO ROOT::Gpad)
+target_link_libraries(General PUBLIC ${SOURCES2})
 
 ROOT_GENERATE_DICTIONARY(GeoManagerExtractor LINKDEF LinkDef.h)

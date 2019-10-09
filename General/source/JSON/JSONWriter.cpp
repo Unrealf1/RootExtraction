@@ -16,6 +16,7 @@ void JSONWriter::BeginBlock() {
 
 void JSONWriter::EndBlock() {
     --current_depth;
+    stream << '\n';
     Depth();
     stream << block_end;
 }
