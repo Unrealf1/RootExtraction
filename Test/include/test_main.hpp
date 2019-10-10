@@ -10,5 +10,6 @@
 #include "TGeoManager.h"
 #include "TGeometry.h"
 #include "TFile.h"
+#include <fstream>
 
 #endif //FORMALLANGUAGES_TEST_MAIN_HPP

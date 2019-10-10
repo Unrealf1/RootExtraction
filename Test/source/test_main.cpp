@@ -7,7 +7,12 @@ int main(int argc, char** argv) {
         return 0;
     }
     TGeoManagerExporter exp(gGeoManager);
-    exp.Write(std::cout);
+    std::ofstream myformat("myformat.json");
+    exp.Write(myformat);
+    gGeoManager->Export("test.gdml", "kekname");
+
+    gGeoManager->GetTopVolume()->SetVisibility(true);
+    gGeoManager->Draw();
 
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();

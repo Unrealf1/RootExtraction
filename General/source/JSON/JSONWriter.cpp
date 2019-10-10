@@ -35,6 +35,13 @@ void JSONWriter::AddProperty(const std::string &name, const int64_t& value) {
     last_property = true;
 }
 
+void JSONWriter::AddProperty(const std::string& name, const double& value) {
+    CheckForComma();
+    Depth();
+    stream << '\"' << name << "\": " << std::to_string(value);
+    last_property = true;
+}
+
 void JSONWriter::AddProperty(const std::string &name) {
     CheckForComma();
     Depth();

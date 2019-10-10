@@ -3,8 +3,6 @@
 //
 
 #include "TGeoManagerExporter.hpp"
-#include "TGeoBBox.h"
-#include <iostream>
 
 TGeoManagerExporter::TGeoManagerExporter(TGeoManager *geoManager)
 :geoManager(geoManager){}
@@ -18,17 +16,16 @@ void TGeoManagerExporter::Write(std::ostream &os) {
     JSONWriter wr(os);
     wr.BeginBlock();
 
-    //Step one: write styles?
     writeStyles(wr);
-    //Step two: write all volumes to templates
+
     writeTemplates(wr);
-    //Step three: write all nodes
+
     writeChildren(wr);
 
     wr.EndBlock();
 }
 
-void TGeoManagerExporter::writeTemplates(JSONWriter& wr) {
+void TGeoManagerExporter::writeTemplates(JSONWriter& wr) const{
     wr.AddProperty("templates");
     wr.BeginBlock();
     for (auto&& volume : volumes) {
@@ -48,24 +45,42 @@ void TGeoManagerExporter::writeTemplates(JSONWriter& wr) {
             position.push_back(box->GetOrigin()[1]);
             position.push_back(box->GetOrigin()[2]);
 
-            size.push_back(box->GetDX());
-            size.push_back(box->GetDY());
-            size.push_back(box->GetDZ());
+            size.push_back(box->GetDX() * 2.0);
+            size.push_back(box->GetDY() * 2.0);
+            size.push_back(box->GetDZ() * 2.0);
         }
 
         if (shape->TestShapeBit(TGeoShape::EShapeType::kGeoCone)) {
-            type = "cone";
-        } else if (shape->TestShapeBit(TGeoShape::EShapeType::kGeoTube)) {
-            type = "tube";
-        } else if (shape->TestShapeBit(TGeoShape::EShapeType::kGeoBad) ||
+            type += "cone";
+        }
+        if (shape->TestShapeBit(TGeoShape::EShapeType::kGeoTube)) {
+            type += "tube";
+        }
+        if (shape->TestShapeBit(TGeoShape::EShapeType::kGeoBad) ||
             shape->TestShapeBit(TGeoShape::EShapeType::kGeoNoShape)) {
-            type = "ErrorType";
-        } else if (type.empty()) {
-            type = "Unknown";
+            type += "ErrorType";
+        }
+
+        if (type.empty()) {
+            type += "Unknown";
         }
 
         wr.AddProperty("Type", type);
-        wr.AddProperty("Material", volume->GetMaterial()->GetName());
+        auto material = volume->GetMaterial();
+        if (material != nullptr) {
+            wr.AddProperty("Material");
+            wr.BeginBlock();
+
+            wr.AddProperty("name", material->GetName());
+
+            TColor* color = gROOT->GetColor(material->GetDefaultColor());
+            wr.AddProperty("color", stringFromColor(color));
+
+            wr.AddProperty("opacity", (int64_t)material->GetTransparency());
+
+            wr.EndBlock();
+            //End of material
+        }
         if (!position.empty() && !(position[0] == 0 && position[1] == 0 && position[2] == 0)) {
             wr.AddProperty("Position");
             wr.BeginBlock();
@@ -90,20 +105,28 @@ void TGeoManagerExporter::writeTemplates(JSONWriter& wr) {
     //End of "templates"
 }
 
-void TGeoManagerExporter::writeChildren(JSONWriter &wr) {
+void TGeoManagerExporter::writeChildren(JSONWriter &wr) const {
     wr.AddProperty("children");
     wr.BeginBlock();
 
-    wr.AddProperty("FakeChild");
-    wr.BeginBlock();
-    wr.AddProperty("FakeProperty", "FakeValue");
-    wr.EndBlock();
+    std::queue<TGeoNode*> nodes;
+    for (TObject* obj : *(geoManager->GetTopVolume()->GetNodes())) {
+        nodes.push(dynamic_cast<TGeoNode*>(obj));
+    }
+
+    while(!nodes.empty()) {
+        TGeoNode* current = nodes.front();
+        nodes.pop();
+        DFSAddNodes(wr, current);
+    }
 
     wr.EndBlock();
     //End of "children"
 }
 
-void TGeoManagerExporter::writeStyles(JSONWriter &wr) {
+void TGeoManagerExporter::writeStyles(JSONWriter &wr) const {
+    std::cerr << "TGeoManagerExporter::WriteStyles is not implemented yet!" << std::endl;
+    return;
     wr.AddProperty("styles");
     wr.BeginBlock();
 
@@ -142,4 +165,92 @@ void TGeoManagerExporter::Prepare() {
     }
 
 }
+
+std::string TGeoManagerExporter::stringFromColor(TColor *color) const {
+    uint16_t red = color->GetRed() * 255;
+    uint16_t green = color->GetGreen() * 255;
+    uint16_t blue = color->GetBlue() * 255;
+
+    std::stringstream sstr;
+    sstr << '#' << std::hex << std::setfill('0') << std::setw(3) << red << green << blue;
+
+    return sstr.str();
+}
+
+void TGeoManagerExporter::DFSAddNodes(JSONWriter& wr, TGeoNode* node) const {
+    if (node == nullptr) {
+        return;
+    }
+    wr.AddProperty(node->GetName());
+    wr.BeginBlock();
+
+    wr.AddProperty("type", "proxy");
+
+    wr.AddProperty("templateName", node->GetVolume()->GetName());
+
+    auto matrix = node->GetMatrix();
+    if (matrix->IsGeneral() || matrix->IsCombi() || matrix->IsRotation()) {
+        WriteRotation(wr, (TGeoRotation*)matrix);
+    }
+
+    if (matrix->IsGeneral() || matrix->IsCombi() || matrix->IsTranslation()) {
+        WriteTranslation(wr, (TGeoTranslation*)matrix);
+    }
+
+    if (matrix->IsGeneral() || matrix->IsScale()) {
+        WriteScale(wr, (TGeoScale*)matrix);
+    }
+
+    if (node->GetNodes() != nullptr && node->GetNodes()->GetSize() > 0) {
+        wr.AddProperty("children");
+        wr.BeginBlock();
+        for (auto obj : *(node->GetNodes())) {
+            auto nd = dynamic_cast<TGeoNode*> (obj);
+            DFSAddNodes(wr, nd);
+        }
+        wr.EndBlock();
+    }
+    wr.EndBlock();
+}
+
+void TGeoManagerExporter::WriteRotation(JSONWriter& wr, TGeoRotation* matrix) const{
+    double phi = 0.0;
+    double theta = 0.0;
+    double psi = 0.0;
+    matrix->GetAngles(phi, theta, psi);
+
+    wr.AddProperty("rotation");
+    wr.BeginBlock();
+
+    wr.AddProperty("phi", phi);
+    wr.AddProperty("theta", theta);
+    wr.AddProperty("psi", psi);
+    wr.EndBlock();
+}
+
+void TGeoManagerExporter::WriteTranslation(JSONWriter& wr, TGeoTranslation* matrix) const{
+    const double* translation = matrix->GetTranslation();
+
+    wr.AddProperty("translation");
+    wr.BeginBlock();
+
+    wr.AddProperty("x", translation[0]);
+    wr.AddProperty("y", translation[1]);
+    wr.AddProperty("z", translation[2]);
+
+    wr.EndBlock();
+}
+
+void TGeoManagerExporter::WriteScale(JSONWriter& wr, TGeoScale* matrix) const {
+    const double* scale = matrix->GetScale();
+    wr.AddProperty("scale");
+    wr.BeginBlock();
+
+    wr.AddProperty("x", scale[0]);
+    wr.AddProperty("y", scale[1]);
+    wr.AddProperty("z", scale[2]);
+
+    wr.EndBlock();
+}
+
 //ClassImp(TGeoManagerExporter);

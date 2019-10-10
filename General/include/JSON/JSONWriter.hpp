@@ -14,6 +14,7 @@ public:
     void EndBlock();
     void AddProperty(const std::string& name, const std::string& value);
     void AddProperty(const std::string& name, const int64_t& value);
+    void AddProperty(const std::string& name, const double& value);
     void AddProperty(const std::string& name);
 private:
     std::ostream& stream;

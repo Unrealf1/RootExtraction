@@ -11,6 +11,13 @@
 #include <TGeoManager.h>
 #include "TGeometry.h"
 #include "JSON/JSONWriter.hpp"
+#include "TGeoBBox.h"
+#include <iostream>
+#include "TColor.h"
+#include <TROOT.h>
+#include <sstream>
+#include <TGeoNode.h>
+#include <TObject.h>
 
 class TGeoManagerExporter {
 public:
@@ -24,9 +31,14 @@ private:
 
     void Prepare();
 
-    void writeTemplates(JSONWriter& wr);
-    void writeChildren(JSONWriter& wr);
-    void writeStyles(JSONWriter& wr);
+    void writeTemplates(JSONWriter& wr) const;
+    void writeChildren(JSONWriter& wr) const;
+    void writeStyles(JSONWriter& wr) const;
+    std::string stringFromColor(TColor* color) const;
+    void DFSAddNodes(JSONWriter& wr, TGeoNode* node) const;
+    void WriteRotation(JSONWriter& wr, TGeoRotation* matrix) const;
+    void WriteTranslation(JSONWriter& wr, TGeoTranslation* matrix) const;
+    void WriteScale(JSONWriter& wr, TGeoScale* matrix) const;
 
     //ClassDef(TGeoManagerExporter, 1);
 };
