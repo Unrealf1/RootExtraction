@@ -14,6 +14,14 @@ void JSONWriter::BeginBlock() {
     ++current_depth;
 }
 
+void JSONWriter::BeginBlock(const std::string &name) {
+    CheckForComma();
+    Depth();
+    stream << '\"' << name << "\": ";
+    last_property = true;
+    BeginBlock();
+}
+
 void JSONWriter::EndBlock() {
     --current_depth;
     stream << '\n';
@@ -42,13 +50,6 @@ void JSONWriter::AddProperty(const std::string& name, const double& value) {
     last_property = true;
 }
 
-void JSONWriter::AddProperty(const std::string &name) {
-    CheckForComma();
-    Depth();
-    stream << '\"' << name << "\": ";
-    last_property = true;
-}
-
 void JSONWriter::CheckForComma() {
     if (last_property) {
         stream << ",\n";
@@ -60,3 +61,5 @@ void JSONWriter::CheckForComma() {
 void JSONWriter::Depth() {
     stream << std::string(4 * current_depth, ' ');
 }
+
+//ClassImp(JSONWriter);
