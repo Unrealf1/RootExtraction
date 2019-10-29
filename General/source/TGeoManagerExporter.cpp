@@ -28,6 +28,15 @@ void TGeoManagerExporter::Write(std::ostream &os) {
 
 void TGeoManagerExporter::writeTemplates(JSONWriter& wr) const{
     wr.BeginBlock("templates");
+
+    writeTemplateVolumes(wr);
+    writeTemplateNodes(wr);
+
+    wr.EndBlock();
+    //End of "templates"
+}
+
+void TGeoManagerExporter::writeTemplateVolumes(JSONWriter &wr) const {
     for (auto&& volume : volumes) {
         if (volume == nullptr) {
             continue;
@@ -50,8 +59,46 @@ void TGeoManagerExporter::writeTemplates(JSONWriter& wr) const{
         wr.EndBlock();
         //End of volume block
     }
+}
+
+void TGeoManagerExporter::writeTemplateNodes(JSONWriter &wr) const {
+    for (auto&& entry : nodes) {
+        //if (entry.second <= 1) {
+        //    continue;
+        //}
+        // Every node is going to templates for now
+        auto node = entry.first;
+
+        wr.BeginBlock(node->GetName());
+
+        wr.AddProperty("type", "hep.dataforge.vis.spatial.VisualGroup3D");
+
+        writeMatrix(wr, node->GetMatrix());
+
+        if (node->GetNodes() != nullptr && node->GetNodes()->GetSize() > 0) {
+            wr.BeginBlock("children");
+            for (auto obj : *(node->GetNodes())) {
+                auto nd = dynamic_cast<TGeoNode*> (obj);
+                writeChildTemplateNode(wr, nd);
+            }
+            wr.EndBlock();
+            // End of children block
+        }
+
+        wr.EndBlock();
+        // End of node block
+    }
+}
+
+void TGeoManagerExporter::writeChildTemplateNode(JSONWriter &wr, TGeoNode* node) const {
+    wr.BeginBlock(node->GetName());
+
+    wr.AddProperty("type", proxy_type);
+
+    wr.AddProperty("templateName", node->GetName());
+
     wr.EndBlock();
-    //End of "templates"
+    // End of node block
 }
 
 void TGeoManagerExporter::writeMaterial(JSONWriter &wr, TGeoMaterial *material) const {
@@ -216,15 +263,15 @@ void TGeoManagerExporter::writeChildren(JSONWriter &wr) const {
         return;
     }
 
-    std::queue<TGeoNode*> nodes;
+    std::queue<TGeoNode*> topNodesQue;
     for (TObject* obj : *(topNodes)) {
-        nodes.push(dynamic_cast<TGeoNode*>(obj));
+        topNodesQue.push(dynamic_cast<TGeoNode*>(obj));
     }
 
     wr.BeginBlock("children");
-    while(!nodes.empty()) {
-        TGeoNode* current = nodes.front();
-        nodes.pop();
+    while(!topNodesQue.empty()) {
+        TGeoNode* current = topNodesQue.front();
+        topNodesQue.pop();
         DFSAddNodes(wr, current);
     }
 
@@ -254,15 +301,16 @@ void TGeoManagerExporter::Prepare() {
         volume_que.pop();
         volumes.insert(current_volume);
 
-        TObjArray* nodes = current_volume->GetNodes();
-        if (nodes == nullptr) {
+        TObjArray* current_nodes = current_volume->GetNodes();
+        if (current_nodes == nullptr) {
             continue;
         }
-        for (int i = 0; i < nodes->GetSize(); ++i) {
-            auto node = (TGeoNode*)nodes->At(i);
+        for (int i = 0; i < current_nodes->GetSize(); ++i) {
+            auto node = (TGeoNode*)current_nodes->At(i);
             if (node == nullptr) {
                 continue;
             }
+            ++nodes[node];
             if (volumes.find(node->GetVolume()) == volumes.end()) {
                 volume_que.push(node->GetVolume());
             }
@@ -270,6 +318,8 @@ void TGeoManagerExporter::Prepare() {
 
     }
 
+    std::cout << "Found " << volumes.size() << " volumes\n"
+    << "Found " << nodes.size() << " unique nodes" << std::endl;
 }
 
 std::string TGeoManagerExporter::stringFromColor(TColor *color) const {
@@ -291,19 +341,19 @@ void TGeoManagerExporter::DFSAddNodes(JSONWriter& wr, TGeoNode* node) const {
 
     wr.AddProperty("type", proxy_type);
 
-    wr.AddProperty("templateName", node->GetVolume()->GetName());
+    wr.AddProperty("templateName", node->GetName());
 
     writeMatrix(wr, node->GetMatrix());
 
-    if (node->GetNodes() != nullptr && node->GetNodes()->GetSize() > 0) {
-        wr.BeginBlock("children");
-        for (auto obj : *(node->GetNodes())) {
-            auto nd = dynamic_cast<TGeoNode*> (obj);
-            DFSAddNodes(wr, nd);
-        }
-        wr.EndBlock();
-        // Children
-    }
+//    if (node->GetNodes() != nullptr && node->GetNodes()->GetSize() > 0) {
+//        wr.BeginBlock("children");
+//        for (auto obj : *(node->GetNodes())) {
+//            auto nd = dynamic_cast<TGeoNode*> (obj);
+//            DFSAddNodes(wr, nd);
+//        }
+//        wr.EndBlock();
+//        // Children
+//    }
     wr.EndBlock();
     // Node
 }

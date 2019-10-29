@@ -23,6 +23,7 @@
 #include <TObject.h>
 #include <TROOT.h>
 #include <unordered_set>
+#include <unordered_map>
 
 class TGeoManagerExporter {
 public:
@@ -32,6 +33,7 @@ public:
 private:
     bool prepared = false;
     std::unordered_set<TGeoVolume*> volumes;
+    std::unordered_map<TGeoNode*, uint32_t> nodes;
     TGeoManager* geoManager;
     static const std::string box_type;
     static const std::string proxy_type;
@@ -41,6 +43,10 @@ private:
     void Prepare();
 
     void writeTemplates(JSONWriter& wr) const;
+    void writeTemplateVolumes(JSONWriter& wr) const;
+    void writeTemplateNodes(JSONWriter& wr) const;
+    void writeChildTemplateNode(JSONWriter& wr, TGeoNode* node) const;
+
     void writeShape(JSONWriter& wr, TGeoShape* shape) const;
     void writeComposite(JSONWriter& wr, TGeoCompositeShape* composite) const;
     void writeTube(JSONWriter& wr, TGeoTube* tube) const;

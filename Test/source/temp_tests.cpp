@@ -24,11 +24,15 @@ TEST(General, GeofileFull) {
 
     ASSERT_NE(gGeoManager, nullptr);
 
+    auto volumes = gGeoManager->GetListOfVolumes();
+    auto nodes = gGeoManager->GetListOfNodes();
+
     TGeoManagerExporter exp(gGeoManager);
     std::ofstream myformat("myformat.json");
     exp.Write(myformat);
-    gGeoManager->Export("test.gdml", "kekname");
+    gGeoManager->Export("test.gdml", "somename");
 
     gGeoManager->GetTopVolume()->SetVisibility(true);
     gGeoManager->Draw();
 }
+
