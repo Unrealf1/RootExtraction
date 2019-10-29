@@ -23,11 +23,15 @@ void TGeoManagerExporter::Write(std::ostream &os) {
     writeChildren(wr);
 
     wr.EndBlock();
+    wr.Flush();
 }
 
 void TGeoManagerExporter::writeTemplates(JSONWriter& wr) const{
     wr.BeginBlock("templates");
     for (auto&& volume : volumes) {
+        if (volume == nullptr) {
+            continue;
+        }
         wr.BeginBlock(volume->GetName());
 
         writeShape(wr, volume->GetShape());
@@ -71,6 +75,9 @@ void TGeoManagerExporter::writeMaterial(JSONWriter &wr, TGeoMaterial *material) 
 }
 
 void TGeoManagerExporter::writeShape(JSONWriter &wr, TGeoShape *shape) const {
+    if (shape == nullptr) {
+        return;
+    }
     if (shape->TestShapeBit(TGeoCompositeShape::EShapeType::kGeoComb)) {
         writeComposite(wr, dynamic_cast<TGeoCompositeShape*>(shape));
 
@@ -98,7 +105,7 @@ void TGeoManagerExporter::writeShape(JSONWriter &wr, TGeoShape *shape) const {
 }
 
 void TGeoManagerExporter::writeComposite(JSONWriter &wr, TGeoCompositeShape *composite) const {
-    wr.AddProperty("Type", composite_type);
+    wr.AddProperty("type", composite_type);
     auto bool_node = composite->GetBoolNode();
 
     wr.BeginBlock("first");
@@ -170,7 +177,7 @@ void TGeoManagerExporter::writeCone(JSONWriter& wr, TGeoCone* cone) const {
 }
 
 void TGeoManagerExporter::writeBox(JSONWriter &wr, TGeoBBox *box) const {
-    wr.AddProperty("Type", box_type);
+    wr.AddProperty("type", box_type);
 
     auto origin = box->GetOrigin();
     if (!(origin[0] == 0 && origin[1] == 0 && origin[2] == 0)) {
@@ -190,7 +197,7 @@ void TGeoManagerExporter::writeBoxPosition(JSONWriter &wr, TGeoBBox* box) const 
     size.push_back(box->GetDZ() * 2.0);
 
     if (!(size[0] == 0 && size[1] == 0 && size[2] == 0)) {
-        wr.BeginBlock("Size");
+        wr.BeginBlock("size");
         wr.AddProperty("x", size[0]);
         wr.AddProperty("y", size[1]);
         wr.AddProperty("z", size[2]);
@@ -199,13 +206,22 @@ void TGeoManagerExporter::writeBoxPosition(JSONWriter &wr, TGeoBBox* box) const 
 }
 
 void TGeoManagerExporter::writeChildren(JSONWriter &wr) const {
-    wr.BeginBlock("children");
+    auto topVolume = geoManager->GetTopVolume();
+    if (topVolume == nullptr) {
+        return;
+    }
+
+    auto topNodes = topVolume->GetNodes();
+    if (topNodes == nullptr) {
+        return;
+    }
 
     std::queue<TGeoNode*> nodes;
-    for (TObject* obj : *(geoManager->GetTopVolume()->GetNodes())) {
+    for (TObject* obj : *(topNodes)) {
         nodes.push(dynamic_cast<TGeoNode*>(obj));
     }
 
+    wr.BeginBlock("children");
     while(!nodes.empty()) {
         TGeoNode* current = nodes.front();
         nodes.pop();
@@ -286,11 +302,16 @@ void TGeoManagerExporter::DFSAddNodes(JSONWriter& wr, TGeoNode* node) const {
             DFSAddNodes(wr, nd);
         }
         wr.EndBlock();
+        // Children
     }
     wr.EndBlock();
+    // Node
 }
 
 void TGeoManagerExporter::writeMatrix(JSONWriter &wr, TGeoMatrix *matrix) const {
+    if (matrix == nullptr) {
+        return;
+    }
     if (matrix->IsGeneral() || matrix->IsCombi() || matrix->IsRotation()) {
         WriteRotation(wr, (TGeoRotation*)matrix);
     }

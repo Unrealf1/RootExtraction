@@ -50,6 +50,14 @@ void JSONWriter::AddProperty(const std::string& name, const double& value) {
     last_property = true;
 }
 
+void JSONWriter::Flush() {
+    stream << std::flush;
+}
+
+uint32_t JSONWriter::GetDepth() const {
+    return current_depth;
+}
+
 void JSONWriter::CheckForComma() {
     if (last_property) {
         stream << ",\n";

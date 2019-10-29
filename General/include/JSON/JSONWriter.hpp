@@ -17,6 +17,8 @@ public:
     void AddProperty(const std::string& name, const std::string& value);
     void AddProperty(const std::string& name, const int64_t& value);
     void AddProperty(const std::string& name, const double& value);
+    void Flush();
+    uint32_t GetDepth() const;
 private:
     std::ostream& stream;
     uint32_t current_depth = 0;
