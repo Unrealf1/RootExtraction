@@ -3,7 +3,6 @@
 //
 
 #include "test_main.hpp"
-#include <TGeoManager.h>
 
 TEST(General, SimpleGeom) {
     TGeoManager* manager = new TGeoManager("simple1", "Simple geometry");
@@ -14,8 +13,11 @@ TEST(General, SimpleGeom) {
     R->SetVisibility(true);
     manager->SetTopVolume(R);
     TGeoManagerExporter exp(manager);
-    std::ofstream myformat("test1.json");
+    std::ofstream myformat("test1.json", std::ios_base::trunc);
     exp.Write(myformat);
+    myformat.close();
+    std::ifstream mf("test1.json");
+    ASSERT_TRUE(checkBalance(mf));
     gGeoManager->Export("test1.gdml", "TEST 1");
 }
 
@@ -24,12 +26,12 @@ TEST(General, GeofileFull) {
 
     ASSERT_NE(gGeoManager, nullptr);
 
-    auto volumes = gGeoManager->GetListOfVolumes();
-    auto nodes = gGeoManager->GetListOfNodes();
-
     TGeoManagerExporter exp(gGeoManager);
-    std::ofstream myformat("myformat.json");
+    std::fstream myformat("myformat.json", std::ios_base::trunc);
     exp.Write(myformat);
+    myformat.close();
+    std::ifstream mf("test1.json");
+    ASSERT_TRUE(checkBalance(mf));
     gGeoManager->Export("test.gdml", "somename");
 
     gGeoManager->GetTopVolume()->SetVisibility(true);

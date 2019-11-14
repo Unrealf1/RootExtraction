@@ -11,5 +11,12 @@
 #include "TGeometry.h"
 #include "TFile.h"
 #include <fstream>
+#include <iostream>
+#include <ios>
+
+class NullBuffer : public std::streambuf {
+    int overflow(int c) override;
+};
+bool checkBalance(std::istream& str);
 
 #endif //FORMALLANGUAGES_TEST_MAIN_HPP

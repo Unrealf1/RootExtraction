@@ -28,12 +28,15 @@ void TGeoManagerExporter::Write(std::ostream &os) {
 
 void TGeoManagerExporter::writeTemplates(JSONWriter& wr) const{
     wr.BeginBlock("templates");
+    wr.BeginBlock("children");
 
     writeTemplateVolumes(wr);
     writeTemplateNodes(wr);
 
     wr.EndBlock();
-    //End of "templates"
+    //End of "children" block
+    wr.EndBlock();
+    //End of "templates" block
 }
 
 void TGeoManagerExporter::writeTemplateVolumes(JSONWriter &wr) const {
@@ -227,13 +230,9 @@ void TGeoManagerExporter::writeBox(JSONWriter &wr, TGeoBBox *box) const {
     wr.AddProperty("type", box_type);
 
     auto origin = box->GetOrigin();
-    if (!(origin[0] == 0 && origin[1] == 0 && origin[2] == 0)) {
-        wr.BeginBlock("Position");
-        wr.AddProperty("x", origin[0]);
-        wr.AddProperty("y", origin[1]);
-        wr.AddProperty("z", origin[2]);
-        wr.EndBlock();
-    }
+    wr.AddProperty("xSize", origin[0]);
+    wr.AddProperty("ySize", origin[1]);
+    wr.AddProperty("zSize", origin[2]);
 }
 
 void TGeoManagerExporter::writeBoxPosition(JSONWriter &wr, TGeoBBox* box) const {
