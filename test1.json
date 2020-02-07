@@ -1,0 +1,25 @@
+{
+
+    "templates": {
+
+        "children": {
+
+            "R": {
+
+                "type": "hep.dataforge.vis.spatial.Box",
+                "xSize": 0.000000,
+                "ySize": 0.000000,
+                "zSize": 0.000000,
+                "size": [ 50.000000, 50.000000, 10.000000 ],
+                "properties": {
+
+                    "Material": {
+
+                        "name": "Vacuum",
+                        "color": "#000ff0"
+                    }
+                }
+            }
+        }
+    }
+}

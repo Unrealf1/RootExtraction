@@ -37,4 +37,3 @@ TEST(General, GeofileFull) {
     gGeoManager->GetTopVolume()->SetVisibility(true);
     gGeoManager->Draw();
 }
-

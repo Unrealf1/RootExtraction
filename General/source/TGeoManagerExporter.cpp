@@ -242,13 +242,7 @@ void TGeoManagerExporter::writeBoxPosition(JSONWriter &wr, TGeoBBox* box) const 
     size.push_back(box->GetDY() * 2.0);
     size.push_back(box->GetDZ() * 2.0);
 
-    if (!(size[0] == 0 && size[1] == 0 && size[2] == 0)) {
-        wr.BeginBlock("size");
-        wr.AddProperty("x", size[0]);
-        wr.AddProperty("y", size[1]);
-        wr.AddProperty("z", size[2]);
-        wr.EndBlock();
-    }
+    wr.AddProperty("size", size);
 }
 
 void TGeoManagerExporter::writeChildren(JSONWriter &wr) const {

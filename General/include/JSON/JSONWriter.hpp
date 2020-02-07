@@ -6,6 +6,7 @@
 #define ROOTEXTRACTION_JSONWRITER_HPP
 
 #include <ostream>
+#include <vector>
 #include <TROOT.h>
 
 class JSONWriter {
@@ -14,9 +15,14 @@ public:
     void BeginBlock();
     void BeginBlock(const std::string& name);
     void EndBlock();
+
     void AddProperty(const std::string& name, const std::string& value);
     void AddProperty(const std::string& name, const int64_t& value);
     void AddProperty(const std::string& name, const double& value);
+    void AddProperty(const std::string& name, const std::vector<std::string>& array);
+    void AddProperty(const std::string& name, const std::vector<int64_t>& array);
+    void AddProperty(const std::string& name, const std::vector<double>& array);
+
     void Flush();
     uint32_t GetDepth() const;
 private:

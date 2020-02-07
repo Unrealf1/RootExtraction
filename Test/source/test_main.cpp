@@ -4,6 +4,7 @@ int NullBuffer::overflow(int c) { return c; }
 
 bool checkBalance(std::istream& str) {
     int32_t counter = 0;
+    int32_t square_counter = 0;
     bool in_string = false;
     while (!str.eof()) {
         char c = str.get();
@@ -17,12 +18,16 @@ bool checkBalance(std::istream& str) {
             ++counter;
         } else if (c == '}') {
             --counter;
+        } else if (c == '[') {
+            ++square_counter;
+        } else if (c == ']') {
+            --square_counter;
         }
-        if (counter < 0) {
+        if (counter < 0 || square_counter < 0) {
             return false;
         }
     }
-    return (counter == 0);
+    return (counter == 0) && (square_counter == 0);
 }
 
 int main(int argc, char** argv) {

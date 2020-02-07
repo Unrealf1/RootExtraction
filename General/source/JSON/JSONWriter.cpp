@@ -29,14 +29,14 @@ void JSONWriter::EndBlock() {
     stream << block_end;
 }
 
-void JSONWriter::AddProperty(const std::string &name, const std::string& value) {
+void JSONWriter::AddProperty(const std::string& name, const std::string& value) {
     CheckForComma();
     Depth();
     stream << '\"' << name << "\": \"" << value << '\"';
     last_property = true;
 }
 
-void JSONWriter::AddProperty(const std::string &name, const int64_t& value) {
+void JSONWriter::AddProperty(const std::string& name, const int64_t& value) {
     CheckForComma();
     Depth();
     stream << '\"' << name << "\": " << std::to_string(value);
@@ -47,6 +47,57 @@ void JSONWriter::AddProperty(const std::string& name, const double& value) {
     CheckForComma();
     Depth();
     stream << '\"' << name << "\": " << std::to_string(value);
+    last_property = true;
+}
+
+void JSONWriter::AddProperty(const std::string& name, const std::vector<std::string>& array) {
+    CheckForComma();
+    Depth();
+    stream << '\"' << name << "\": [ ";
+    bool first = true;
+    for (auto& value : array) {
+        if (first) {
+            first = false;
+        } else {
+            stream << ", ";
+        }
+        stream << '\"' << value << '\"';
+    }
+    stream << " ]";
+    last_property = true;
+}
+
+void JSONWriter::AddProperty(const std::string& name, const std::vector<int64_t>& array) {
+    CheckForComma();
+    Depth();
+    stream << '\"' << name << "\": [ ";
+    bool first = true;
+    for (auto& value : array) {
+        if (first) {
+            first = false;
+        } else {
+            stream << ", ";
+        }
+        stream << std::to_string(value);
+    }
+    stream << " ]";
+    last_property = true;
+}
+
+void JSONWriter::AddProperty(const std::string& name, const std::vector<double>& array) {
+    CheckForComma();
+    Depth();
+    stream << '\"' << name << "\": [ ";
+    bool first = true;
+    for (auto& value : array) {
+        if (first) {
+            first = false;
+        } else {
+            stream << ", ";
+        }
+        stream << std::to_string(value);
+    }
+    stream << " ]";
     last_property = true;
 }
 

@@ -3,6 +3,7 @@
 //
 
 #include <stack>
+#include <vector>
 #include "test_main.hpp"
 
 TEST(JSONWriter, Balance_zero_sequence) {
@@ -68,6 +69,34 @@ TEST(JSONWriter, Written_Balance1) {
         wr.AddProperty("prop}", "value}}");
         wr.EndBlock();
     }
+    ASSERT_FALSE(sstr.eof());
+    ASSERT_TRUE(checkBalance(sstr));
+}
+
+TEST(JSONWriter, Arrays) {
+    std::stringstream sstr;
+
+    JSONWriter wr(sstr);
+
+    const int N = 5;
+
+    std::vector<int64_t> ints(N);
+    std::vector<double> doubles(N);
+    std::vector<std::string> strings(N);
+
+
+    for (int i = 0; i < N; ++i) {
+        ints[i] = i;
+        doubles[i] = i * 1.0 / 17.0;
+        strings[i] = std::to_string(i);
+    }
+
+    wr.BeginBlock();
+    wr.AddProperty("ints", ints);
+    wr.AddProperty("doubles", doubles);
+    wr.AddProperty("strings", strings);
+    wr.EndBlock();
+
     ASSERT_FALSE(sstr.eof());
     ASSERT_TRUE(checkBalance(sstr));
 }
