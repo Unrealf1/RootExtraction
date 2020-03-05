@@ -9,7 +9,7 @@ option(DEBUG "Build with debug flags" OFF)
 option(TESTS "Build tests" OFF)
 
 if (DEBUG)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -fsanitize=address,undefined -g")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -fsanitize=undefined -g")
 endif(DEBUG)
 
 find_package(ROOT CONFIG REQUIRED)

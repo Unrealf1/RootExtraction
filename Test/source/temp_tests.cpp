@@ -13,12 +13,12 @@ TEST(General, SimpleGeom) {
     R->SetVisibility(true);
     manager->SetTopVolume(R);
     TGeoManagerExporter exp(manager);
-    std::ofstream myformat("test1.json", std::ios_base::trunc);
+    std::ofstream myformat("simple1.json", std::ios_base::trunc);
     exp.Write(myformat);
     myformat.close();
-    std::ifstream mf("test1.json");
+    std::ifstream mf("simple1.json");
     ASSERT_TRUE(checkBalance(mf));
-    gGeoManager->Export("test1.gdml", "TEST 1");
+    gGeoManager->Export("simple1.gdml", "TEST 1");
 }
 
 TEST(General, GeofileFull) {
@@ -27,12 +27,13 @@ TEST(General, GeofileFull) {
     ASSERT_NE(gGeoManager, nullptr);
 
     TGeoManagerExporter exp(gGeoManager);
-    std::fstream myformat("myformat.json", std::ios_base::trunc);
+    std::ofstream myformat("myformat.json", std::ios_base::trunc);
     exp.Write(myformat);
     myformat.close();
-    std::ifstream mf("test1.json");
+
+    std::ifstream mf("myformat.json");
     ASSERT_TRUE(checkBalance(mf));
-    gGeoManager->Export("test.gdml", "somename");
+    gGeoManager->Export("myformat.gdml", "somename");
 
     gGeoManager->GetTopVolume()->SetVisibility(true);
     gGeoManager->Draw();

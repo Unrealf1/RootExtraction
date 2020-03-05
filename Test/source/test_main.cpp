@@ -3,9 +3,18 @@
 int NullBuffer::overflow(int c) { return c; }
 
 bool checkBalance(std::istream& str) {
-    int32_t counter = 0;
+    
+    if (str.bad()) {
+        return false;
+    }
+    
+    int32_t common_counter = 0;
     int32_t square_counter = 0;
+    uint64_t counter = 0;
     bool in_string = false;
+
+    
+
     while (!str.eof()) {
         char c = str.get();
         // This is not entirely correct!
@@ -15,19 +24,23 @@ bool checkBalance(std::istream& str) {
         } else if(in_string) {
             continue;
         } else if (c == '{') {
-            ++counter;
+            ++common_counter;
         } else if (c == '}') {
-            --counter;
+            --common_counter;
         } else if (c == '[') {
             ++square_counter;
         } else if (c == ']') {
             --square_counter;
         }
-        if (counter < 0 || square_counter < 0) {
+        if (common_counter < 0 || square_counter < 0) {
             return false;
         }
+        if (!(counter % 15000000)) {
+            //std::cerr << counter/1000000 << " millions symbols read" << std::endl;
+        }
+        ++counter;
     }
-    return (counter == 0) && (square_counter == 0);
+    return (common_counter == 0) && (square_counter == 0);
 }
 
 int main(int argc, char** argv) {
