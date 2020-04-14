@@ -1,4 +1,0 @@
-/home/fedor/Programming/mipt-npm/RootExtraction/Test/build/CMakeFiles/rebuild_cache.dir
-/home/fedor/Programming/mipt-npm/RootExtraction/Test/build/CMakeFiles/edit_cache.dir
-/home/fedor/Programming/mipt-npm/RootExtraction/Test/build/CMakeFiles/Test.dir
-/home/fedor/Programming/mipt-npm/RootExtraction/Test/build/CMakeFiles/test.dir
