@@ -35,29 +35,46 @@ public:
     void Write(std::ostream& os);
 private:
     bool prepared = false;
-    std::unordered_map<TGeoVolume*, std::string> volumes;
+    std::unordered_set<TGeoVolume*> volumes;
     std::unordered_set<TGeoNode*> nodes;
     std::unordered_set<TGeoMaterial*> materials;
 
     TGeoManager* geoManager;
-    
-    static const std::string box_type;
-    static const std::string proxy_type;
-    static const std::string composite_type;
-    static const std::string tube_type;
-    
-    static const std::string k_templates_name;
-    static const std::string k_children_name; 
 
-    // A function where all of the actual extraction of data occurs
+    static const char *const box_type;
+    static const char *const proxy_type;
+    static const char *const composite_type;
+    static const char *const tube_type;
+    static const char *const group_type;
+
+    static const char *const k_templates_name;
+    static const char *const k_children_name;
+    static const char *const k_styles_name;
+    static const char *const k_properties_name;
+    static const char *const k_template_field;
+
+    // A function where all of the actual extraction of the data occurs
     void Prepare();
 
+    // These functions write "prototypes" section
     void writeTemplates(JSONWriter& wr) const;
     void writeTemplateVolumes(JSONWriter& wr) const;
     void writeTemplateNodes(JSONWriter& wr) const;
     void writeChildTemplateNode(JSONWriter& wr, TGeoNode* node) const;
-    void writeVolumeTemplateNode(JSONWriter &wr, TGeoVolume* volume) const;
 
+    // A function that writes top level "properties" section
+    void writeProperties(JSONWriter& wr) const;
+
+    // These two functions write top level "children" section
+    void writeChildren(JSONWriter& wr) const;
+    void writeNode(JSONWriter &wr, TGeoNode* node) const;
+
+    // Functions for top level "styleSheet" section
+    void writeStyles(JSONWriter& wr) const;
+    std::string stringFromColor(TColor* color) const;
+    void writeStylesMaterial(JSONWriter& wr, TGeoMaterial* material) const;
+
+    // Functions to identify and serialize various shapes
     void writeShape(JSONWriter& wr, TGeoShape* shape) const;
     void writeComposite(JSONWriter& wr, TGeoCompositeShape* composite) const;
     void writeTube(JSONWriter& wr, TGeoTube* tube) const;
@@ -66,12 +83,7 @@ private:
     void writeSphere(JSONWriter& wr, TGeoSphere* sphere) const;
     void writeBoxPosition(JSONWriter& wr, TGeoBBox* box) const;
 
-    void writeChildren(JSONWriter& wr) const;
-    void writeNode(JSONWriter &wr, TGeoNode* node) const;
-
-    void writeStyles(JSONWriter& wr) const;
-    std::string stringFromColor(TColor* color) const;
-    void writeStylesMaterial(JSONWriter& wr, TGeoMaterial* material) const;
+    // Set of functions to identify and serialize various matrices
     void writeMatrix(JSONWriter& wr, TGeoMatrix* matrix) const;
     void writeGeneralMatrix(JSONWriter& wr, TGeoGenTrans* matrix) const;
     void writeCombination(JSONWriter& wr, TGeoCombiTrans* matrix) const;
@@ -82,11 +94,11 @@ private:
     void writeTranslationBlock(JSONWriter& wr, double x, double y, double z) const;
     void writeScaleBlock(JSONWriter& wr, double x, double y, double z) const;
 
-    // return string "material[material_name]" where material_name is replaced by the name of material
+    // Utility functions
+    // returns string "material[material_name]" where material_name is replaced by the name of material
     std::string getMaterialEntry(TGeoMaterial* material) const;
     double DegreeToRad(double angle) const;
 
-    void writeProperties(JSONWriter& wr) const;
     //ClassDef(TGeoManagerExporter, 2223);
 };
 

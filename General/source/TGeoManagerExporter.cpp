@@ -16,6 +16,8 @@ void TGeoManagerExporter::Write(std::ostream &os) {
     JSONWriter wr(os);
     wr.BeginBlock();
 
+    wr.AddProperty("type", group_type);
+
     writeStyles(wr);
 
     writeTemplates(wr);
@@ -29,7 +31,7 @@ void TGeoManagerExporter::Write(std::ostream &os) {
 }
 
 void TGeoManagerExporter::writeProperties(JSONWriter& wr) const {
-    wr.BeginBlock("properties");
+    wr.BeginBlock(k_properties_name);
 
     wr.BeginBlock("rotation");
 
@@ -40,25 +42,20 @@ void TGeoManagerExporter::writeProperties(JSONWriter& wr) const {
 
     // End of block "properties"
     wr.EndBlock();
-    return;
 }
 
 void TGeoManagerExporter::writeTemplates(JSONWriter& wr) const{
     wr.BeginBlock(k_templates_name);
-    wr.BeginBlock(k_children_name);
 
     writeTemplateVolumes(wr);
     writeTemplateNodes(wr);
 
     wr.EndBlock();
-    //End of k_children_name block
-    wr.EndBlock();
     //End of "templates" block
 }
 
 void TGeoManagerExporter::writeTemplateVolumes(JSONWriter &wr) const {
-    for (auto&& volume_entry : volumes) {
-        auto volume = volume_entry.first;
+    for (auto volume : volumes) {
         if (volume == nullptr) {
             continue;
         }
@@ -87,10 +84,10 @@ void TGeoManagerExporter::writeTemplateNodes(JSONWriter &wr) const {
     // Every node is going to templates for now
     for (auto&& node : nodes) {
         wr.BeginBlock(node->GetName());
-        wr.AddProperty("type", "hep.dataforge.vis.spatial.VisualGroup3D");
         writeMatrix(wr, node->GetMatrix());
 
         if (node->GetNodes() != nullptr && node->GetNodes()->GetSize() > 0) {
+            wr.AddProperty("type", group_type);
             wr.BeginBlock(k_children_name);
             for (auto obj : *(node->GetNodes())) {
                 auto nd = dynamic_cast<TGeoNode*> (obj);
@@ -98,6 +95,9 @@ void TGeoManagerExporter::writeTemplateNodes(JSONWriter &wr) const {
             }
             wr.EndBlock();
             // End of children block
+        } else {
+            wr.AddProperty("type", proxy_type);
+            wr.AddProperty(k_template_field, node->GetVolume()->GetName());
         }
 
         wr.EndBlock();
@@ -105,23 +105,12 @@ void TGeoManagerExporter::writeTemplateNodes(JSONWriter &wr) const {
     }        
 }
 
-void TGeoManagerExporter::writeVolumeTemplateNode(JSONWriter &wr, TGeoVolume* volume) const {
-    wr.BeginBlock(volume->GetName());
-
-    wr.AddProperty("type", proxy_type);
-
-    wr.AddProperty("templateName", volume->GetName());
-
-    wr.EndBlock();
-    // End of volume block
-}
-
 void TGeoManagerExporter::writeChildTemplateNode(JSONWriter &wr, TGeoNode* node) const {
     wr.BeginBlock(node->GetName());
 
     wr.AddProperty("type", proxy_type);
 
-    wr.AddProperty("templateName", node->GetName());
+    wr.AddProperty(k_template_field, node->GetName());
 
     wr.EndBlock();
     // End of node block
@@ -206,7 +195,7 @@ void TGeoManagerExporter::writeSphere(JSONWriter &wr, TGeoSphere *sphere) const 
 }
 
 void TGeoManagerExporter::writeCone(JSONWriter& wr, TGeoCone* cone) const {
-    wr.AddProperty("type", "cone");
+    wr.AddProperty("type", "3d.cone");
     if (cone->GetDz() != 0.0) {
         wr.AddProperty("length", 2.0 * cone->GetDz());
     }
@@ -248,10 +237,7 @@ void TGeoManagerExporter::writeChildren(JSONWriter &wr) const {
 
     wr.BeginBlock(k_children_name);
 
-    TGeoNodeOffset fake_node;
-    fake_node.SetName(topVolume->GetName());
-    fake_node.SetVolume(topVolume);
-    writeNode(wr, &fake_node);
+    writeNode(wr, gGeoManager->GetTopNode());
 
     auto nds = topVolume->GetNodes();
     if (nds != nullptr && nds->GetSize() > 0) {
@@ -263,7 +249,7 @@ void TGeoManagerExporter::writeChildren(JSONWriter &wr) const {
         }
         
     } else {
-        std::cout << "NO CHILDREN AT ALL!!!" << std::endl;
+        std::cout << "NO CHILDREN AT ALL!" << std::endl;
     }
     wr.EndBlock();
     // End of block "children"
@@ -277,24 +263,27 @@ void TGeoManagerExporter::writeNode(JSONWriter &wr, TGeoNode* node) const {
     wr.BeginBlock(node->GetName());
     if (node->GetVolume()) {
         wr.AddProperty("type", proxy_type);
-        wr.AddProperty("templateName", node->GetVolume()->GetName());
+        wr.AddProperty(k_template_field, node->GetVolume()->GetName());
     } else {
         wr.AddProperty("type", "ERROR");
     }
+
+    auto matrix = node->GetMatrix();
+    if (matrix != nullptr) {
+        writeMatrix(wr, matrix);
+    }
+
     wr.EndBlock();
     //End of node block
 }
 
 void TGeoManagerExporter::writeStyles(JSONWriter &wr) const {
-    wr.BeginBlock("styleSheet");
-    wr.BeginBlock("styleMap");
+    wr.BeginBlock(k_styles_name);
 
     for (auto material : materials) {
         writeStylesMaterial(wr, material);
     }
 
-    wr.EndBlock();
-    //End of "styleMap"
     wr.EndBlock();
     //End of "styleSheet"
 }
@@ -337,7 +326,7 @@ std::string TGeoManagerExporter::stringFromColor(TColor *color) const {
     uint16_t blue = color->GetBlue() * 255;
 
     std::stringstream sstr;
-    sstr << '#' << std::hex << std::setfill('0') << std::setw(3) << red << green << blue;
+    sstr << "0x" << std::hex << std::setfill('0') << std::setw(3) << red << green << blue;
 
     return sstr.str();
 }
@@ -351,7 +340,7 @@ void TGeoManagerExporter::Prepare() {
     while(!volume_que.empty()) {
         TGeoVolume* current_volume = volume_que.front();
         volume_que.pop();
-        volumes[current_volume] = current_volume->GetName();
+        volumes.insert(current_volume);
         materials.insert(current_volume->GetMaterial());
 
         TObjArray* current_nodes = current_volume->GetNodes();
@@ -474,11 +463,15 @@ std::string TGeoManagerExporter::getMaterialEntry(TGeoMaterial* material) const 
 }
 
 
-const std::string TGeoManagerExporter::box_type = "3d.box";
-const std::string TGeoManagerExporter::proxy_type = "3d.proxy";
-const std::string TGeoManagerExporter::composite_type = "hep.dataforge.vis.spatial.Composite";
-const std::string TGeoManagerExporter::tube_type = "hep.dataforge.vis.spatial.Tube";
+const char* const TGeoManagerExporter::box_type = "3d.box";
+const char* const TGeoManagerExporter::proxy_type = "3d.proxy";
+const char* const TGeoManagerExporter::composite_type = "3d.composite";
+const char* const TGeoManagerExporter::tube_type = "3d.tube";
+const char* const TGeoManagerExporter::group_type = "group.3d";
 
-const std::string TGeoManagerExporter::k_templates_name = "prototypes";
-const std::string TGeoManagerExporter::k_children_name = "children";
+const char* const TGeoManagerExporter::k_templates_name = "prototypes";
+const char* const TGeoManagerExporter::k_children_name = "children";
+const char* const TGeoManagerExporter::k_styles_name = "styleSheet";
+const char* const TGeoManagerExporter::k_properties_name = "properties";
+const char* const TGeoManagerExporter::k_template_field = "templateName";
 //ClassImp(TGeoManagerExporter);
