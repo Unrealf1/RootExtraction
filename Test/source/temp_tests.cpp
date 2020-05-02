@@ -13,7 +13,7 @@ TEST(General, SimpleGeom) {
     manager->SetTopVolume(R);
     TGeoManagerExporter exp(manager);
     std::ofstream myformat("simple1.json", std::ios_base::trunc);
-    exp.Write(myformat);
+    exp.write(myformat);
     myformat.close();
     std::ifstream mf("simple1.json");
     ASSERT_TRUE(checkBalance(mf));
@@ -27,7 +27,7 @@ TEST(General, GeofileFull) {
 
     TGeoManagerExporter exp(gGeoManager);
     std::ofstream myformat("myformat.json", std::ios_base::trunc);
-    exp.Write(myformat);
+    exp.write(myformat);
     myformat.close();
 
     std::ifstream mf("myformat.json");
@@ -47,7 +47,7 @@ TEST(General, MediumGeom) {
 
     TGeoManagerExporter exp(gGeoManager);
     std::ofstream myformat(name + ".json", std::ios_base::trunc);
-    exp.Write(myformat);
+    exp.write(myformat);
     myformat.close();
 
     std::ifstream mf(name + ".json");
@@ -66,7 +66,7 @@ TEST(General, Tank) {
 
     TGeoManagerExporter exp(gGeoManager);
     std::ofstream myformat(name + ".json", std::ios_base::trunc);
-    exp.Write(myformat);
+    exp.write(myformat);
     myformat.close();
 
     std::ifstream mf(name + ".json");

@@ -32,11 +32,13 @@ public:
     explicit TGeoManagerExporter(TGeoManager* geoManager);
 
     // A function to write TGeoManager to a given stream in JSON format
-    void Write(std::ostream& os);
+    void write(std::ostream& os);
 private:
     bool prepared = false;
     std::unordered_set<TGeoVolume*> volumes;
     std::unordered_set<TGeoNode*> nodes;
+    std::unordered_map<std::string, TGeoVolume*> volumes2;
+    std::unordered_map<std::string, TGeoNode*> nodes2;
     std::unordered_set<TGeoMaterial*> materials;
 
     TGeoManager* geoManager;
@@ -54,7 +56,7 @@ private:
     static const char *const k_template_field;
 
     // A function where all of the actual extraction of the data occurs
-    void Prepare();
+    void prepare();
 
     // These functions write "prototypes" section
     void writeTemplates(JSONWriter& wr) const;

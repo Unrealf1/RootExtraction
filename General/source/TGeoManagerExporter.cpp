@@ -7,9 +7,9 @@
 TGeoManagerExporter::TGeoManagerExporter(TGeoManager *geoManager)
 :geoManager(geoManager){}
 
-void TGeoManagerExporter::Write(std::ostream &os) {
+void TGeoManagerExporter::write(std::ostream &os) {
     if (!prepared) {
-        Prepare();
+        prepare();
         prepared = true;
     }
 
@@ -55,11 +55,20 @@ void TGeoManagerExporter::writeTemplates(JSONWriter& wr) const{
 }
 
 void TGeoManagerExporter::writeTemplateVolumes(JSONWriter &wr) const {
-    for (auto volume : volumes) {
+    wr.BeginBlock("volumes");
+    wr.AddProperty("type", group_type);
+    wr.BeginBlock("children");
+
+    for (auto volume_entry : volumes2) {
+        auto volume = volume_entry.second;
         if (volume == nullptr) {
             continue;
         }
         wr.BeginBlock(volume->GetName());
+
+        //wr.BeginBlock(k_children_name);
+
+        //wr.BeginBlock(std::string(volume->GetName()) + "__fake__");
 
         writeShape(wr, volume->GetShape());
 
@@ -75,30 +84,57 @@ void TGeoManagerExporter::writeTemplateVolumes(JSONWriter &wr) const {
             //End of properties
         }
 
+        //wr.EndBlock();
+        //End of fake block
+
+        // if (volume->GetNodes() != nullptr) {
+        //     for (auto obj : *(volume->GetNodes())) {
+        //         auto nd = dynamic_cast<TGeoNode*> (obj);
+        //         writeChildTemplateNode(wr, nd);
+        //     }
+        // }
+        //wr.EndBlock();
+        // End of children block
+
+
         wr.EndBlock();
         //End of volume block
+
     }
+    wr.EndBlock();
+    // End of children block
+
+    wr.EndBlock();
+    // End of volumes block
 }
 
 void TGeoManagerExporter::writeTemplateNodes(JSONWriter &wr) const {
     // Every node is going to templates for now
-    for (auto&& node : nodes) {
+    for (auto node_entry : nodes2) {
+        auto node = node_entry.second;
+
         wr.BeginBlock(node->GetName());
         writeMatrix(wr, node->GetMatrix());
 
+        wr.AddProperty("type", group_type);
+        wr.BeginBlock(k_children_name);
+
+        wr.BeginBlock(node->GetVolume()->GetName());
+        wr.AddProperty("type", proxy_type);
+        wr.AddProperty(k_template_field, "volumes." + std::string(node->GetVolume()->GetName()));
+        wr.EndBlock();
+        //End of node->volume block
+
+
         if (node->GetNodes() != nullptr && node->GetNodes()->GetSize() > 0) {
-            wr.AddProperty("type", group_type);
-            wr.BeginBlock(k_children_name);
             for (auto obj : *(node->GetNodes())) {
                 auto nd = dynamic_cast<TGeoNode*> (obj);
                 writeChildTemplateNode(wr, nd);
-            }
-            wr.EndBlock();
-            // End of children block
-        } else {
-            wr.AddProperty("type", proxy_type);
-            wr.AddProperty(k_template_field, node->GetVolume()->GetName());
+            }    
         }
+
+        wr.EndBlock();
+        // End of children block
 
         wr.EndBlock();
         // End of node block
@@ -239,18 +275,18 @@ void TGeoManagerExporter::writeChildren(JSONWriter &wr) const {
 
     writeNode(wr, gGeoManager->GetTopNode());
 
-    auto nds = topVolume->GetNodes();
-    if (nds != nullptr && nds->GetSize() > 0) {
-        std::cout << "SIZE OF CHILDREN " << nds->GetSize() << std::endl;
+    // auto nds = topVolume->GetNodes();
+    // if (nds != nullptr && nds->GetSize() > 0) {
+    //     std::cout << "SIZE OF CHILDREN " << nds->GetSize() << std::endl;
         
-        for (auto obj : *(nds)) {
-            auto nd = dynamic_cast<TGeoNode*> (obj);
-            writeNode(wr, nd);
-        }
+    //     for (auto obj : *(nds)) {
+    //         auto nd = dynamic_cast<TGeoNode*> (obj);
+    //         writeNode(wr, nd);
+    //     }
         
-    } else {
-        std::cout << "NO CHILDREN AT ALL!" << std::endl;
-    }
+    // } else {
+    //     std::cout << "NO CHILDREN AT ALL!" << std::endl;
+    // }
     wr.EndBlock();
     // End of block "children"
 }
@@ -263,7 +299,8 @@ void TGeoManagerExporter::writeNode(JSONWriter &wr, TGeoNode* node) const {
     wr.BeginBlock(node->GetName());
     if (node->GetVolume()) {
         wr.AddProperty("type", proxy_type);
-        wr.AddProperty(k_template_field, node->GetVolume()->GetName());
+        std::cout << "Name of top node is " << node->GetName() << "****************\n";
+        wr.AddProperty(k_template_field, node->GetName());
     } else {
         wr.AddProperty("type", "ERROR");
     }
@@ -331,17 +368,20 @@ std::string TGeoManagerExporter::stringFromColor(TColor *color) const {
     return sstr.str();
 }
 
-void TGeoManagerExporter::Prepare() {
+void TGeoManagerExporter::prepare() {
     //BFS over all TGeoVolumes and TGeoNodes starting from MasterVolume
 
     std::queue<TGeoVolume*> volume_que;
     volume_que.push(geoManager->GetMasterVolume());
+    nodes.insert(gGeoManager->GetTopNode());
+    nodes2[gGeoManager->GetTopNode()->GetName()] = gGeoManager->GetTopNode();
 
     while(!volume_que.empty()) {
         TGeoVolume* current_volume = volume_que.front();
         volume_que.pop();
         volumes.insert(current_volume);
         materials.insert(current_volume->GetMaterial());
+        volumes2[current_volume->GetName()] = current_volume;
 
         TObjArray* current_nodes = current_volume->GetNodes();
         if (current_nodes == nullptr) {
@@ -353,6 +393,7 @@ void TGeoManagerExporter::Prepare() {
                 continue;
             }
             nodes.insert(node);
+            nodes2[node->GetName()] = node;
             if (volumes.find(node->GetVolume()) == volumes.end()) {
                 volume_que.push(node->GetVolume());
             }
