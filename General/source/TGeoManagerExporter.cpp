@@ -371,6 +371,14 @@ std::string TGeoManagerExporter::stringFromColor(TColor *color) const {
 void TGeoManagerExporter::prepare() {
     //BFS over all TGeoVolumes and TGeoNodes starting from MasterVolume
 
+    // Collect all materials
+    TList* materials_list = geoManager->GetListOfMaterials();
+    TIter next(materials_list);
+    TGeoMaterial *material;
+    while ((material = (TGeoMaterial *)next())) {
+        materials.insert(material);
+    }
+
     std::queue<TGeoVolume*> volume_que;
     volume_que.push(geoManager->GetMasterVolume());
     nodes.insert(gGeoManager->GetTopNode());
