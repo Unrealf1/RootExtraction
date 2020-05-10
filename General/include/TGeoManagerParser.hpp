@@ -18,7 +18,7 @@ public:
 private:
     static void parseVolumes(
             TGeoNode* node,
-            std::unordered_map<std::string, ParsedVolume*> parsedVolumes,
+            std::unordered_map<std::string, ParsedVolume*>& parsedVolumes,
             StructLst* fAccPatt,
             StructLst* fRejShape);
 

@@ -8,7 +8,10 @@
 #include <TGeoTube.h>
 #include <TGeoBoolNode.h>
 #include <TGeoCompositeShape.h>
-#include <TGDMLWrite.h>
+//#include <TGDMLWrite.h>
+
+
+#include <TGeoMatrix.h>
 #include "TGeoManagerParser.hpp"
 
 struct Translation {
@@ -87,7 +90,7 @@ struct ParsedComposite : public ParsedShape {
         rightTranslation.x = rtr[0];
         rightTranslation.y = rtr[1];
         rightTranslation.z = rtr[2];
-        
+
         left = TGeoManagerParser::parseShape(composite->GetBoolNode()->GetLeftShape());
         right = TGeoManagerParser::parseShape(composite->GetBoolNode()->GetRightShape());
     }

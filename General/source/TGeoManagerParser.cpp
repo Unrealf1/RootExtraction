@@ -25,9 +25,10 @@ ParsedTGeoManager TGeoManagerParser::parse(TGeoManager *geoManager) {
 
     TGeoNode* top_node = geoManager->GetTopNode();
 
-
     TList* materials = geoManager->GetListOfMaterials();
     std::unordered_set<ParsedMaterial*> parsed_materials = parseMaterials(materials);
+    std::unordered_map<std::string, ParsedVolume *> parsed_volumes;
+    parseVolumes(top_node, parsed_volumes, fAccPatt, fRejShape);
 
     UnsetTemporaryBits(geoManager);
     delete fAccPatt;
@@ -58,7 +59,7 @@ ParsedMaterial *TGeoManagerParser::parseMaterial(TGeoMaterial *material) {
 
 void TGeoManagerParser::parseVolumes(
         TGeoNode *node,
-        std::unordered_map<std::string, ParsedVolume *> parsedVolumes,
+        std::unordered_map<std::string, ParsedVolume *>& parsedVolumes,
         StructLst* fAccPatt,
         StructLst* fRejShape) {
 
@@ -166,7 +167,7 @@ void TGeoManagerParser::parseVolumes(
         offset = pattFinder->GetStart() - xlo;
 
         //TODO Finish this function
-
+        std::cerr << "Can't work with divisions" << std::endl;
         /*axis = GetPattAxis(divaxis, pattClsName, unit);
 
         //create division node
